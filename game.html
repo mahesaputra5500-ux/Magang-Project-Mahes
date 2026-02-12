@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Snake Underground</title>
+ <style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Trebuchet MS', sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: radial-gradient(circle at top, #2a1c0e, #0b0704);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #f5deb3;
+}
+
+.game-container {
+  background: linear-gradient(180deg, #1b1208, #090603);
+  border: 4px solid #5c3b1e;
+  padding: 18px;
+  border-radius: 15px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.9);
+  text-align: center;
+  width: 450px;
+}
+
+h1 {
+  margin-bottom: 10px;
+  color: #e0b070;
+}
+
+.top-ui {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+select {
+  background: #5c3b1e;
+  color: #fff;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+canvas {
+  background: repeating-linear-gradient(
+    45deg,
+    #1c140a,
+    #1c140a 20px,
+    #24180c 20px,
+    #24180c 40px
+  );
+  border: 3px solid #704214;
+  border-radius: 10px;
+  margin: 10px auto;
+  display: block;
+}
+
+.info {
+  font-size: 14px;
+  color: #cfae70;
+}
+
+button {
+  background: #704214;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  margin-top: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #8b5a2b;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="game-container">
+  <h1>🐍 Snake Underground</h1>
+
+  <div class="top-ui">
+    <select id="difficulty" onchange="setDifficulty()">
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+    <span id="levelText">Level: 1</span>
+  </div>
+
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <p class="info">⬆ ⬇ ⬅ ➡ untuk bergerak</p>
+  <button onclick="startGame()">Restart</button>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const levelText = document.getElementById("levelText");
+
+const gridSize = 20;
+const tileCount = canvas.width / gridSize;
+
+let snake, direction, food;
+let score, level, speed, gameLoop;
+let difficulty = "easy";
+
+/* ===== SOUND ===== */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function soundEat() {
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 700;
+  g.gain.value = 0.25;
+  o.start();
+  o.stop(audioCtx.currentTime + 0.1);
+}
+
+function soundDead() {
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 200;
+  g.gain.value = 0.35;
+  o.start();
+  o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.6);
+  o.stop(audioCtx.currentTime + 0.6);
+}
+
+/* ===== DIFFICULTY ===== */
+function setDifficulty() {
+  difficulty = document.getElementById("difficulty").value;
+  startGame();
+}
+
+function baseSpeed() {
+  if (difficulty === "easy") return 150;
+  if (difficulty === "medium") return 120;
+  return 90;
+}
+
+/* ===== GAME START ===== */
+function startGame() {
+  snake = [{ x: 10, y: 10 }];
+  direction = { x: 1, y: 0 };
+  food = randomFood();
+  score = 0;
+  level = 1;
+  speed = baseSpeed();
+
+  levelText.textContent = "Level: " + level;
+  clearInterval(gameLoop);
+  gameLoop = setInterval(update, speed);
+}
+
+function randomFood() {
+  return {
+    x: Math.floor(Math.random() * tileCount),
+    y: Math.floor(Math.random() * tileCount)
+  };
+}
+
+/* ===== CONTROL ===== */
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp" && direction.y === 0) direction = { x: 0, y: -1 };
+  if (e.key === "ArrowDown" && direction.y === 0) direction = { x: 0, y: 1 };
+  if (e.key === "ArrowLeft" && direction.x === 0) direction = { x: -1, y: 0 };
+  if (e.key === "ArrowRight" && direction.x === 0) direction = { x: 1, y: 0 };
+});
+
+/* ===== UPDATE ===== */
+function update() {
+  const head = {
+    x: snake[0].x + direction.x,
+    y: snake[0].y + direction.y
+  };
+
+  // Wall
+  if (head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount) {
+    return gameOver();
+  }
+
+  // Self hit
+  for (let part of snake) {
+    if (part.x === head.x && part.y === head.y) {
+      return gameOver();
+    }
+  }
+
+  snake.unshift(head);
+
+  // Eat food
+  if (head.x === food.x && head.y === food.y) {
+    soundEat();
+    score++;
+    food = randomFood();
+    checkLevelUp();
+  } else {
+    snake.pop();
+  }
+
+  draw();
+}
+
+/* ===== LEVEL SYSTEM ===== */
+function checkLevelUp() {
+  if (score === 5) levelUp(2);
+  if (score === 10) levelUp(3);
+}
+
+function levelUp(newLevel) {
+  if (newLevel > level && newLevel <= 3) {
+    level = newLevel;
+    levelText.textContent = "Level: " + level;
+    speed -= 25;
+    clearInterval(gameLoop);
+    gameLoop = setInterval(update, speed);
+  }
+}
+
+/* ===== DRAW ===== */
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Snake
+  snake.forEach((p, i) => {
+    ctx.fillStyle = i === 0 ? "#9aff00" : "#3f7f1f";
+    ctx.fillRect(p.x * gridSize, p.y * gridSize, gridSize - 2, gridSize - 2);
+  });
+
+  // Food
+  ctx.fillStyle = "#ff5555";
+  ctx.beginPath();
+  ctx.arc(
+    food.x * gridSize + gridSize / 2,
+    food.y * gridSize + gridSize / 2,
+    gridSize / 2.5,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.fillStyle = "#f5deb3";
+  ctx.font = "14px Arial";
+  ctx.fillText("Score: " + score, 10, 20);
+}
+
+/* ===== GAME OVER ===== */
+function gameOver() {
+  soundDead();
+  clearInterval(gameLoop);
+
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#ffcc66";
+  ctx.font = "28px Arial";
+  ctx.fillText("GAME OVER", 95, 190);
+
+  ctx.font = "16px Arial";
+  ctx.fillText("Score: " + score, 160, 220);
+}
+
+/* AUTO START */
+startGame();
+
+</script>
+
+</body>
+</html>

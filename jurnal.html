@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jurnal Magang SMP Chandra Buana 2025–2026</title>
+ <style>
+:root {
+  --primary: #1b5e20;
+  --accent: #2e7d32;
+  --soft: #f4fbf4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 15px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(to bottom, #dcedc8, #f1f8e9);
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+header h1 {
+  margin: 0;
+  color: var(--primary);
+}
+
+header h2,
+header h3 {
+  margin: 5px 0;
+  font-weight: normal;
+}
+
+.card {
+  background: var(--soft);
+  border-left: 6px solid var(--primary);
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #b6cdb8;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+textarea {
+  margin-top: 10px;
+  min-height: 90px;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent);
+}
+
+.identity-output {
+  margin-top: 10px;
+  background: white;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px dashed #a5d6a7;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  background: var(--primary);
+  color: white;
+}
+
+th, td {
+  padding: 8px;
+  border: 1px solid #c8e6c9;
+  vertical-align: top;
+}
+
+.ttd {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.buttons {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.print { background: #6d6d6d; }
+.pdf { background: #2e7d32; }
+
+@media (max-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .ttd {
+    flex-direction: column;
+    gap: 30px;
+  }
+}
+
+@media print {
+  body { background: white; }
+  .buttons,
+  input,
+  select,
+  textarea,
+  button {
+    display: none;
+  }
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container" id="printArea">
+
+  <header>
+    <h1>JURNAL MAGANG</h1>
+    <h2>SMP CHANDRA BUANA</h2>
+    <h3>Tahun 2025–2026</h3>
+  </header>
+
+  <!-- IDENTITAS -->
+  <section class="card">
+    <h4>Identitas Siswa</h4>
+
+    <div class="grid-2">
+      <input type="text" id="nama" placeholder="Nama Siswa">
+      <input type="text" id="kelas" placeholder="Kelas">
+      <input type="text" id="tempat" placeholder="Tempat Magang">
+    </div>
+
+    <button onclick="simpanIdentitas()">Simpan Identitas</button>
+
+    <div class="identity-output">
+      <p><b>Nama:</b> <span id="outNama">-</span></p>
+      <p><b>Kelas:</b> <span id="outKelas">-</span></p>
+      <p><b>Tempat Magang:</b> <span id="outTempat">-</span></p>
+    </div>
+  </section>
+
+  <!-- INPUT JURNAL -->
+  <section class="card">
+    <h4>Input Jurnal Harian</h4>
+
+    <div class="grid-2">
+      <input type="date" id="tanggal">
+      <input type="text" id="tema" placeholder="Tema Kegiatan">
+      <select id="bidang">
+        <option value="">Pilih Bidang Kegiatan</option>
+        <option>Programmer</option>
+        <option>Multimedia</option>
+        <option>Pendidikan</option>
+        <option>Otomotif</option>
+        <option>Administrasi</option>
+        <option>Hidroponik</option>
+        <option>Wirausaha</option>
+        <option>Kesehatan</option>
+      </select>
+    </div>
+
+    <!-- INI INPUT KEGIATAN -->
+    <textarea id="kegiatan" placeholder="Uraian kegiatan yang dilakukan"></textarea>
+
+    <button onclick="tambahJurnal()">Tambah Jurnal</button>
+  </section>
+
+  <!-- TABEL JURNAL -->
+  <section class="card">
+    <h4>Daftar Jurnal Magang</h4>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>Tema</th>
+            <th>Bidang</th>
+            <th>Uraian Kegiatan</th>
+          </tr>
+        </thead>
+        <tbody id="jurnalList"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TTD -->
+  <section class="ttd">
+    <div>
+      <p>Pembimbing Lapangan</p><br><br>
+      <p>(............................)</p>
+    </div>
+    <div>
+      <p>Siswa</p><br><br>
+      <p id="ttdNama">(............................)</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="buttons">
+  <button class="print" onclick="window.print()">🖨 Print</button>
+  <button class="pdf" onclick="downloadPDF()">📄 Download PDF</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+let nomor = 1;
+
+function simpanIdentitas() {
+  const nama = getVal("nama");
+  const kelas = getVal("kelas");
+  const tempat = getVal("tempat");
+
+  document.getElementById("outNama").textContent = nama || "-";
+  document.getElementById("outKelas").textContent = kelas || "-";
+  document.getElementById("outTempat").textContent = tempat || "-";
+  document.getElementById("ttdNama").textContent =
+    "(" + (nama || "....................") + ")";
+}
+
+function tambahJurnal() {
+  const tanggal = getVal("tanggal");
+  const tema = getVal("tema");
+  const bidang = getVal("bidang");
+  const kegiatan = getVal("kegiatan");
+
+  if (!tanggal || !tema || !bidang || !kegiatan) {
+    alert("Semua kolom jurnal wajib diisi!");
+    return;
+  }
+
+  const tbody = document.getElementById("jurnalList");
+  const row = tbody.insertRow();
+
+  row.innerHTML = `
+    <td>${nomor++}</td>
+    <td>${tanggal}</td>
+    <td>${tema}</td>
+    <td>${bidang}</td>
+    <td>${kegiatan}</td>
+  `;
+
+  document.getElementById("tanggal").value = "";
+  document.getElementById("tema").value = "";
+  document.getElementById("bidang").value = "";
+  document.getElementById("kegiatan").value = "";
+}
+
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "mm", "a4");
+
+  pdf.html(document.getElementById("printArea"), {
+    callback: () => {
+      pdf.save("Jurnal_Magang_SMP_Chandra_Buana_2025-2026.pdf");
+    },
+    x: 10,
+    y: 10,
+    width: 190
+  });
+}
+
+function getVal(id) {
+  return document.getElementById(id).value.trim();
+}
+
+</script>
+
+</body>
+</html>
