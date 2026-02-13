@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Snake Underground</title>
 
 <style>
@@ -22,38 +23,40 @@ body {
 }
 
 .game-container {
+  width: 100%;
+  max-width: 420px;
   background: linear-gradient(180deg, #1b1208, #090603);
   border: 4px solid #5c3b1e;
-  padding: 18px;
+  padding: 12px;
   border-radius: 15px;
-  box-shadow: 0 0 30px rgba(0,0,0,0.9);
+  box-shadow: 0 0 25px rgba(0,0,0,0.9);
   text-align: center;
-  width: 95%;
-  max-width: 450px;
 }
 
 h1 {
-  margin-bottom: 10px;
   color: #e0b070;
+  margin-bottom: 6px;
 }
 
 .top-ui {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 select {
   background: #5c3b1e;
   color: #fff;
   border: none;
-  padding: 6px;
+  padding: 5px;
   border-radius: 6px;
-  font-weight: bold;
 }
 
 canvas {
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1 / 1;
   background: repeating-linear-gradient(
     45deg,
     #1c140a,
@@ -63,52 +66,46 @@ canvas {
   );
   border: 3px solid #704214;
   border-radius: 10px;
-  margin: 10px auto;
+  margin: 8px auto;
   display: block;
 }
 
-.info {
-  font-size: 14px;
-  color: #cfae70;
-}
-
-button {
-  background: #704214;
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  margin-top: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* ===== MOBILE CONTROLLER ===== */
-#mobile-controls {
+/* ===== TOMBOL ARAH HP ===== */
+.controls {
   margin-top: 12px;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 70px);
+  grid-template-rows: repeat(3, 70px);
   justify-content: center;
+  gap: 6px;
 }
 
-.dpad {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.dpad button {
-  width: 55px;
-  height: 55px;
-  margin: 5px;
+.controls button {
   font-size: 22px;
-  border-radius: 50%;
+  border-radius: 12px;
   border: none;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0,0,0,0.75);
   color: #f5deb3;
 }
 
+.controls .up    { grid-column: 2; grid-row: 1; }
+.controls .left  { grid-column: 1; grid-row: 2; }
+.controls .down  { grid-column: 2; grid-row: 3; }
+.controls .right { grid-column: 3; grid-row: 2; }
+
+button.restart {
+  margin-top: 10px;
+  background: #704214;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+}
+
+/* PC sembunyikan tombol */
 @media (min-width: 768px) {
-  #mobile-controls {
+  .controls {
     display: none;
   }
 }
@@ -129,22 +126,17 @@ button {
     <span id="levelText">Level: 1</span>
   </div>
 
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <canvas id="gameCanvas" width="360" height="360"></canvas>
 
-  <!-- MOBILE CONTROLLER -->
-  <div id="mobile-controls">
-    <div class="dpad">
-      <button data-dir="up">⬆</button>
-      <div>
-        <button data-dir="left">⬅</button>
-        <button data-dir="down">⬇</button>
-        <button data-dir="right">➡</button>
-      </div>
-    </div>
+  <!-- TOMBOL ARAH HP -->
+  <div class="controls">
+    <button class="up">⬆</button>
+    <button class="left">⬅</button>
+    <button class="down">⬇</button>
+    <button class="right">➡</button>
   </div>
 
-  <p class="info">Keyboard / Touch untuk bergerak</p>
-  <button onclick="startGame()">Restart</button>
+  <button class="restart" onclick="startGame()">Restart</button>
 </div>
 
 <script>
@@ -165,7 +157,8 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function soundEat() {
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.connect(g); g.connect(audioCtx.destination);
+  o.connect(g);
+  g.connect(audioCtx.destination);
   o.frequency.value = 700;
   g.gain.value = 0.25;
   o.start();
@@ -175,7 +168,8 @@ function soundEat() {
 function soundDead() {
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.connect(g); g.connect(audioCtx.destination);
+  o.connect(g);
+  g.connect(audioCtx.destination);
   o.frequency.value = 200;
   g.gain.value = 0.35;
   o.start();
@@ -195,7 +189,7 @@ function baseSpeed() {
   return 90;
 }
 
-/* ===== GAME START ===== */
+/* ===== START ===== */
 function startGame() {
   snake = [{ x: 10, y: 10 }];
   direction = { x: 1, y: 0 };
@@ -216,7 +210,7 @@ function randomFood() {
   };
 }
 
-/* ===== CONTROL (KEYBOARD + TOUCH) ===== */
+/* ===== CONTROL KEYBOARD ===== */
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" && direction.y === 0) direction = { x: 0, y: -1 };
   if (e.key === "ArrowDown" && direction.y === 0) direction = { x: 0, y: 1 };
@@ -224,16 +218,22 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowRight" && direction.x === 0) direction = { x: 1, y: 0 };
 });
 
-document.querySelectorAll(".dpad button").forEach(btn => {
-  btn.addEventListener("touchstart", e => {
-    e.preventDefault();
-    const d = btn.dataset.dir;
-
-    if (d === "up" && direction.y === 0) direction = { x: 0, y: -1 };
-    if (d === "down" && direction.y === 0) direction = { x: 0, y: 1 };
-    if (d === "left" && direction.x === 0) direction = { x: -1, y: 0 };
-    if (d === "right" && direction.x === 0) direction = { x: 1, y: 0 };
-  });
+/* ===== CONTROL TOUCH ===== */
+document.querySelector(".up").addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (direction.y === 0) direction = { x: 0, y: -1 };
+});
+document.querySelector(".down").addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (direction.y === 0) direction = { x: 0, y: 1 };
+});
+document.querySelector(".left").addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (direction.x === 0) direction = { x: -1, y: 0 };
+});
+document.querySelector(".right").addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (direction.x === 0) direction = { x: 1, y: 0 };
 });
 
 /* ===== UPDATE ===== */
@@ -243,9 +243,10 @@ function update() {
     y: snake[0].y + direction.y
   };
 
-  if (head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount) {
-    return gameOver();
-  }
+  if (
+    head.x < 0 || head.y < 0 ||
+    head.x >= tileCount || head.y >= tileCount
+  ) return gameOver();
 
   for (let p of snake) {
     if (p.x === head.x && p.y === head.y) return gameOver();
@@ -257,7 +258,7 @@ function update() {
     soundEat();
     score++;
     food = randomFood();
-    checkLevelUp();
+    checkLevel();
   } else {
     snake.pop();
   }
@@ -266,7 +267,7 @@ function update() {
 }
 
 /* ===== LEVEL ===== */
-function checkLevelUp() {
+function checkLevel() {
   if (score === 5) levelUp(2);
   if (score === 10) levelUp(3);
 }
@@ -287,7 +288,12 @@ function draw() {
 
   snake.forEach((p, i) => {
     ctx.fillStyle = i === 0 ? "#9aff00" : "#3f7f1f";
-    ctx.fillRect(p.x * gridSize, p.y * gridSize, gridSize - 2, gridSize - 2);
+    ctx.fillRect(
+      p.x * gridSize,
+      p.y * gridSize,
+      gridSize - 2,
+      gridSize - 2
+    );
   });
 
   ctx.fillStyle = "#ff5555";
@@ -316,9 +322,9 @@ function gameOver() {
 
   ctx.fillStyle = "#ffcc66";
   ctx.font = "28px Arial";
-  ctx.fillText("GAME OVER", 95, 190);
+  ctx.fillText("GAME OVER", 85, 190);
   ctx.font = "16px Arial";
-  ctx.fillText("Score: " + score, 160, 220);
+  ctx.fillText("Score: " + score, 145, 220);
 }
 
 startGame();
