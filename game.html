@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Snake Underground</title>
- <style>
+<meta charset="UTF-8">
+<title>Snake Underground</title>
+
+<style>
 * {
   margin: 0;
   padding: 0;
@@ -12,7 +13,7 @@
 }
 
 body {
-  height: 100vh;
+  min-height: 100vh;
   background: radial-gradient(circle at top, #2a1c0e, #0b0704);
   display: flex;
   justify-content: center;
@@ -27,7 +28,8 @@ body {
   border-radius: 15px;
   box-shadow: 0 0 30px rgba(0,0,0,0.9);
   text-align: center;
-  width: 450px;
+  width: 95%;
+  max-width: 450px;
 }
 
 h1 {
@@ -81,13 +83,38 @@ button {
   font-weight: bold;
 }
 
-button:hover {
-  background: #8b5a2b;
+/* ===== MOBILE CONTROLLER ===== */
+#mobile-controls {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
 }
 
-</style>
+.dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
+.dpad button {
+  width: 55px;
+  height: 55px;
+  margin: 5px;
+  font-size: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.65);
+  color: #f5deb3;
+}
+
+@media (min-width: 768px) {
+  #mobile-controls {
+    display: none;
+  }
+}
+</style>
 </head>
+
 <body>
 
 <div class="game-container">
@@ -104,7 +131,19 @@ button:hover {
 
   <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-  <p class="info">⬆ ⬇ ⬅ ➡ untuk bergerak</p>
+  <!-- MOBILE CONTROLLER -->
+  <div id="mobile-controls">
+    <div class="dpad">
+      <button data-dir="up">⬆</button>
+      <div>
+        <button data-dir="left">⬅</button>
+        <button data-dir="down">⬇</button>
+        <button data-dir="right">➡</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="info">Keyboard / Touch untuk bergerak</p>
   <button onclick="startGame()">Restart</button>
 </div>
 
@@ -177,12 +216,24 @@ function randomFood() {
   };
 }
 
-/* ===== CONTROL ===== */
+/* ===== CONTROL (KEYBOARD + TOUCH) ===== */
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" && direction.y === 0) direction = { x: 0, y: -1 };
   if (e.key === "ArrowDown" && direction.y === 0) direction = { x: 0, y: 1 };
   if (e.key === "ArrowLeft" && direction.x === 0) direction = { x: -1, y: 0 };
   if (e.key === "ArrowRight" && direction.x === 0) direction = { x: 1, y: 0 };
+});
+
+document.querySelectorAll(".dpad button").forEach(btn => {
+  btn.addEventListener("touchstart", e => {
+    e.preventDefault();
+    const d = btn.dataset.dir;
+
+    if (d === "up" && direction.y === 0) direction = { x: 0, y: -1 };
+    if (d === "down" && direction.y === 0) direction = { x: 0, y: 1 };
+    if (d === "left" && direction.x === 0) direction = { x: -1, y: 0 };
+    if (d === "right" && direction.x === 0) direction = { x: 1, y: 0 };
+  });
 });
 
 /* ===== UPDATE ===== */
@@ -192,21 +243,16 @@ function update() {
     y: snake[0].y + direction.y
   };
 
-  // Wall
   if (head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount) {
     return gameOver();
   }
 
-  // Self hit
-  for (let part of snake) {
-    if (part.x === head.x && part.y === head.y) {
-      return gameOver();
-    }
+  for (let p of snake) {
+    if (p.x === head.x && p.y === head.y) return gameOver();
   }
 
   snake.unshift(head);
 
-  // Eat food
   if (head.x === food.x && head.y === food.y) {
     soundEat();
     score++;
@@ -219,15 +265,15 @@ function update() {
   draw();
 }
 
-/* ===== LEVEL SYSTEM ===== */
+/* ===== LEVEL ===== */
 function checkLevelUp() {
   if (score === 5) levelUp(2);
   if (score === 10) levelUp(3);
 }
 
-function levelUp(newLevel) {
-  if (newLevel > level && newLevel <= 3) {
-    level = newLevel;
+function levelUp(lv) {
+  if (lv > level) {
+    level = lv;
     levelText.textContent = "Level: " + level;
     speed -= 25;
     clearInterval(gameLoop);
@@ -239,13 +285,11 @@ function levelUp(newLevel) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Snake
   snake.forEach((p, i) => {
     ctx.fillStyle = i === 0 ? "#9aff00" : "#3f7f1f";
     ctx.fillRect(p.x * gridSize, p.y * gridSize, gridSize - 2, gridSize - 2);
   });
 
-  // Food
   ctx.fillStyle = "#ff5555";
   ctx.beginPath();
   ctx.arc(
@@ -273,14 +317,11 @@ function gameOver() {
   ctx.fillStyle = "#ffcc66";
   ctx.font = "28px Arial";
   ctx.fillText("GAME OVER", 95, 190);
-
   ctx.font = "16px Arial";
   ctx.fillText("Score: " + score, 160, 220);
 }
 
-/* AUTO START */
 startGame();
-
 </script>
 
 </body>
